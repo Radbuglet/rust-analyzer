@@ -39,8 +39,8 @@ use crate::{
             FormatPlaceholder, FormatSign, FormatTrait,
         },
         Array, Binding, BindingAnnotation, BindingId, BindingProblems, CaptureBy, ClosureKind,
-        Expr, ExprId, Item, Label, LabelId, Literal, LiteralOrConst, MatchArm, Movability,
-        OffsetOf, Pat, PatId, RecordFieldPat, RecordLitField, Statement,
+        Expr, ExprId, Item, Label, LabelId, LetStaticKind, Literal, LiteralOrConst, MatchArm,
+        Movability, OffsetOf, Pat, PatId, RecordFieldPat, RecordLitField, Statement,
     },
     item_scope::BuiltinShadowMode,
     lang_item::LangItem,
@@ -1370,8 +1370,24 @@ impl ExprCollector<'_> {
                 self.collect_macro_def(statements, macro_id);
             }
             ast::Stmt::Item(_item) => statements.push(Statement::Item(Item::Other)),
-            ast::Stmt::LetStaticStmt(stmt) => {
-                // TODO
+            ast::Stmt::LetStaticStmtSingle(stmt) => {
+                if self.check_cfg(&stmt).is_none() {
+                    return;
+                }
+
+                statements.push(Statement::LetStatic(LetStaticKind::Single(
+                    TypeRef::from_ast_opt(&mut self.ctx(), stmt.ty()),
+                    self.collect_expr_opt(stmt.initializer()),
+                )));
+            }
+            ast::Stmt::LetStaticStmtMany(stmt) => {
+                if self.check_cfg(&stmt).is_none() {
+                    return;
+                }
+
+                statements.push(Statement::LetStatic(LetStaticKind::Bundle(
+                    self.collect_expr_opt(stmt.initializer()),
+                )));
             }
         }
     }

@@ -7,8 +7,8 @@ use span::Edition;
 
 use crate::{
     hir::{
-        Array, BindingAnnotation, CaptureBy, ClosureKind, Literal, LiteralOrConst, Movability,
-        Statement,
+        Array, BindingAnnotation, CaptureBy, ClosureKind, LetStaticKind, Literal, LiteralOrConst,
+        Movability, Statement,
     },
     pretty::{print_generic_args, print_path, print_type_ref},
 };
@@ -753,6 +753,20 @@ impl Printer<'_> {
                 wln!(self);
             }
             Statement::Item(_) => (),
+            Statement::LetStatic(kind) => match *kind {
+                LetStaticKind::Single(ty, expr) => {
+                    w!(self, "let static ");
+                    self.print_type_ref(ty, &self.body.types);
+                    w!(self, " = ");
+                    self.print_expr(expr);
+                    wln!(self, ";");
+                }
+                LetStaticKind::Bundle(expr) => {
+                    w!(self, "let static ..");
+                    self.print_expr(expr);
+                    wln!(self, ";");
+                }
+            },
         }
     }
 

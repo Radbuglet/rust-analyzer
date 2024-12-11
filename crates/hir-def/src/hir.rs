@@ -494,6 +494,13 @@ pub enum Statement {
         has_semi: bool,
     },
     Item(Item),
+    LetStatic(LetStaticKind),
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum LetStaticKind {
+    Single(TypeRefId, ExprId),
+    Bundle(ExprId),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

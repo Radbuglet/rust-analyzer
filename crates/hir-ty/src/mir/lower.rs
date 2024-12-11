@@ -1788,7 +1788,11 @@ impl<'ctx> MirLowerCtx<'ctx> {
                         }
                     }
                 }
-                &hir_def::hir::Statement::Expr { expr, has_semi: _ } => {
+                &hir_def::hir::Statement::Expr { expr, has_semi: _ }
+                | &hir_def::hir::Statement::LetStatic(
+                    hir_def::hir::LetStaticKind::Single(_, expr)
+                    | hir_def::hir::LetStaticKind::Bundle(expr),
+                ) => {
                     let scope2 = self.push_drop_scope();
                     let Some((p, c)) = self.lower_expr_as_place(current, expr, true)? else {
                         scope2.pop_assume_dropped(self);

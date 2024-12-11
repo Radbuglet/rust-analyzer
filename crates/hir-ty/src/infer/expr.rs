@@ -10,7 +10,7 @@ use either::Either;
 use hir_def::{
     hir::{
         ArithOp, Array, AsmOperand, AsmOptions, BinaryOp, ClosureKind, Expr, ExprId, ExprOrPatId,
-        LabelId, Literal, Pat, PatId, Statement, UnaryOp,
+        LabelId, LetStaticKind, Literal, Pat, PatId, Statement, UnaryOp,
     },
     lang_item::{LangItem, LangItemTarget},
     path::{GenericArg, GenericArgs, Path},
@@ -1657,6 +1657,15 @@ impl InferenceContext<'_> {
                             }
                         }
                         Statement::Item(_) => (),
+                        Statement::LetStatic(kind) => match *kind {
+                            // TODO
+                            LetStaticKind::Single(ty, expr) => {
+                                this.infer_expr(expr, &Expectation::None, ExprIsRead::Yes);
+                            }
+                            LetStaticKind::Bundle(expr) => {
+                                this.infer_expr(expr, &Expectation::None, ExprIsRead::Yes);
+                            }
+                        },
                     }
                 }
 

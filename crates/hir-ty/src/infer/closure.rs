@@ -11,8 +11,8 @@ use either::Either;
 use hir_def::{
     data::adt::VariantData,
     hir::{
-        Array, AsmOperand, BinaryOp, BindingId, CaptureBy, Expr, ExprId, ExprOrPatId, Pat, PatId,
-        Statement, UnaryOp,
+        Array, AsmOperand, BinaryOp, BindingId, CaptureBy, Expr, ExprId, ExprOrPatId,
+        LetStaticKind, Pat, PatId, Statement, UnaryOp,
     },
     lang_item::LangItem,
     path::Path,
@@ -750,6 +750,11 @@ impl InferenceContext<'_> {
                             self.consume_expr(*expr);
                         }
                         Statement::Item(_) => (),
+                        Statement::LetStatic(
+                            LetStaticKind::Single(_, expr) | LetStaticKind::Bundle(expr),
+                        ) => {
+                            self.consume_expr(*expr);
+                        }
                     }
                 }
                 if let Some(tail) = tail {

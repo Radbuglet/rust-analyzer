@@ -24,7 +24,7 @@ use crate::{
     expander::Expander,
     hir::{
         dummy_expr_id, Array, AsmOperand, Binding, BindingId, Expr, ExprId, ExprOrPatId, Label,
-        LabelId, Pat, PatId, RecordFieldPat, Statement,
+        LabelId, LetStaticKind, Pat, PatId, RecordFieldPat, Statement,
     },
     item_tree::AttrOwner,
     nameres::DefMap,
@@ -425,6 +425,11 @@ impl Body {
                         }
                         Statement::Expr { expr: expression, .. } => f(*expression),
                         Statement::Item(_) => (),
+                        Statement::LetStatic(
+                            LetStaticKind::Single(_, expr) | LetStaticKind::Bundle(expr),
+                        ) => {
+                            f(*expr);
+                        }
                     }
                 }
                 if let &Some(expr) = tail {
@@ -556,6 +561,11 @@ impl Body {
                         }
                         Statement::Expr { expr: expression, .. } => f(*expression),
                         Statement::Item(_) => (),
+                        Statement::LetStatic(
+                            LetStaticKind::Single(_, expr) | LetStaticKind::Bundle(expr),
+                        ) => {
+                            f(*expr);
+                        }
                     }
                 }
                 if let &Some(expr) = tail {

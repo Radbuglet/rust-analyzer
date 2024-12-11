@@ -129,7 +129,10 @@ impl AssignmentsCollector<'_> {
     fn collect_block(&mut self, block: &ast::BlockExpr) -> Option<()> {
         let last_expr = block.tail_expr().or_else(|| match block.statements().last()? {
             ast::Stmt::ExprStmt(stmt) => stmt.expr(),
-            ast::Stmt::Item(_) | ast::Stmt::LetStmt(_) | ast::Stmt::LetStaticStmt(_) => None,
+            ast::Stmt::Item(_)
+            | ast::Stmt::LetStmt(_)
+            | ast::Stmt::LetStaticStmtSingle(_)
+            | ast::Stmt::LetStaticStmtMany(_) => None,
         })?;
 
         if let ast::Expr::BinExpr(expr) = last_expr {

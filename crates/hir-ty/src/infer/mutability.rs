@@ -4,8 +4,8 @@
 use chalk_ir::{cast::Cast, Mutability};
 use hir_def::{
     hir::{
-        Array, AsmOperand, BinaryOp, BindingAnnotation, Expr, ExprId, Pat, PatId, Statement,
-        UnaryOp,
+        Array, AsmOperand, BinaryOp, BindingAnnotation, Expr, ExprId, LetStaticKind, Pat, PatId,
+        Statement, UnaryOp,
     },
     lang_item::LangItem,
 };
@@ -90,6 +90,15 @@ impl InferenceContext<'_> {
                             self.infer_mut_expr(*expr, Mutability::Not);
                         }
                         Statement::Item(_) => (),
+                        Statement::LetStatic(kind) => match *kind {
+                            // TODO
+                            LetStaticKind::Single(ty, expr) => {
+                                self.infer_mut_expr(expr, Mutability::Not);
+                            }
+                            LetStaticKind::Bundle(expr) => {
+                                self.infer_mut_expr(expr, Mutability::Not);
+                            }
+                        },
                     }
                 }
                 if let Some(tail) = tail {

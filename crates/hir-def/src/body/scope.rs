@@ -6,7 +6,7 @@ use triomphe::Arc;
 use crate::{
     body::{Body, HygieneId},
     db::DefDatabase,
-    hir::{Binding, BindingId, Expr, ExprId, Item, LabelId, Pat, PatId, Statement},
+    hir::{Binding, BindingId, Expr, ExprId, Item, LabelId, LetStaticKind, Pat, PatId, Statement},
     BlockId, ConstBlockId, DefWithBodyId,
 };
 
@@ -243,6 +243,10 @@ fn compute_block_scopes(
                 *scope = scopes.new_macro_def_scope(*scope, macro_id.clone());
             }
             Statement::Item(Item::Other) => (),
+            Statement::LetStatic(kind) => {
+                let (LetStaticKind::Bundle(expr) | LetStaticKind::Single(_, expr)) = *kind;
+                compute_expr_scopes(expr, body, scopes, scope, resolve_const_block);
+            }
         }
     }
     if let Some(expr) = tail {

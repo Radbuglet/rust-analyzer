@@ -60,8 +60,8 @@ pub(super) fn stmt(p: &mut Parser<'_>, semicolon: Semicolon) {
 
     if p.at(T![let]) {
         if p.nth_at(1, T![static]) {
-            let_static_stmt(p, semicolon);
-            m.complete(p, LET_STATIC_STMT);
+            let kind = let_static_stmt(p, semicolon);
+            m.complete(p, kind);
             return;
         }
 
@@ -166,21 +166,19 @@ pub(super) fn let_stmt(p: &mut Parser<'_>, with_semi: Semicolon) {
     }
 }
 
-pub(super) fn let_static_stmt(p: &mut Parser<'_>, with_semi: Semicolon) {
-    let m = p.start();
-
+pub(super) fn let_static_stmt(p: &mut Parser<'_>, with_semi: Semicolon) -> SyntaxKind {
     p.bump(T![let]);
     p.bump(T![static]);
 
     let kind = if p.eat(T![..]) {
         expressions::expr(p);
-        BIND_CONTEXT_MANY
+        LET_STATIC_STMT_MANY
     } else {
         types::type_(p);
         if p.expect(T![=]) {
             expressions::expr(p);
         }
-        BIND_CONTEXT_SINGLE
+        LET_STATIC_STMT_SINGLE
     };
 
     match with_semi {
@@ -193,7 +191,7 @@ pub(super) fn let_static_stmt(p: &mut Parser<'_>, with_semi: Semicolon) {
         }
     }
 
-    m.complete(p, kind);
+    kind
 }
 
 pub(super) fn expr_block_contents(p: &mut Parser<'_>) {

@@ -352,44 +352,6 @@ impl ast::HasAttrs for BinExpr {}
 impl BinExpr {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct BindContextMany {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::HasAttrs for BindContextMany {}
-impl BindContextMany {
-    #[inline]
-    pub fn initializer(&self) -> Option<Expr> { support::child(&self.syntax) }
-    #[inline]
-    pub fn dotdot_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![..]) }
-    #[inline]
-    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
-    #[inline]
-    pub fn let_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![let]) }
-    #[inline]
-    pub fn static_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![static]) }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct BindContextSingle {
-    pub(crate) syntax: SyntaxNode,
-}
-impl ast::HasAttrs for BindContextSingle {}
-impl BindContextSingle {
-    #[inline]
-    pub fn initializer(&self) -> Option<Expr> { support::child(&self.syntax) }
-    #[inline]
-    pub fn ty(&self) -> Option<Type> { support::child(&self.syntax) }
-    #[inline]
-    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
-    #[inline]
-    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
-    #[inline]
-    pub fn let_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![let]) }
-    #[inline]
-    pub fn static_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![static]) }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BlockExpr {
     pub(crate) syntax: SyntaxNode,
 }
@@ -958,6 +920,44 @@ impl LetExpr {
     pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
     #[inline]
     pub fn let_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![let]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LetStaticStmtMany {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasAttrs for LetStaticStmtMany {}
+impl LetStaticStmtMany {
+    #[inline]
+    pub fn initializer(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn dotdot_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![..]) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn let_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![let]) }
+    #[inline]
+    pub fn static_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![static]) }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LetStaticStmtSingle {
+    pub(crate) syntax: SyntaxNode,
+}
+impl ast::HasAttrs for LetStaticStmtSingle {}
+impl LetStaticStmtSingle {
+    #[inline]
+    pub fn initializer(&self) -> Option<Expr> { support::child(&self.syntax) }
+    #[inline]
+    pub fn ty(&self) -> Option<Type> { support::child(&self.syntax) }
+    #[inline]
+    pub fn semicolon_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![;]) }
+    #[inline]
+    pub fn eq_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![=]) }
+    #[inline]
+    pub fn let_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![let]) }
+    #[inline]
+    pub fn static_token(&self) -> Option<SyntaxToken> { support::token(&self.syntax, T![static]) }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -2432,13 +2432,6 @@ impl ast::HasAttrs for Item {}
 impl ast::HasDocComments for Item {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum LetStaticStmt {
-    BindContextMany(BindContextMany),
-    BindContextSingle(BindContextSingle),
-}
-impl ast::HasAttrs for LetStaticStmt {}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Pat {
     BoxPat(BoxPat),
     ConstBlockPat(ConstBlockPat),
@@ -2462,7 +2455,8 @@ pub enum Pat {
 pub enum Stmt {
     ExprStmt(ExprStmt),
     Item(Item),
-    LetStaticStmt(LetStaticStmt),
+    LetStaticStmtMany(LetStaticStmtMany),
+    LetStaticStmtSingle(LetStaticStmtSingle),
     LetStmt(LetStmt),
 }
 
@@ -2846,34 +2840,6 @@ impl AstNode for BecomeExpr {
 impl AstNode for BinExpr {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == BIN_EXPR }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl AstNode for BindContextMany {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == BIND_CONTEXT_MANY }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        if Self::can_cast(syntax.kind()) {
-            Some(Self { syntax })
-        } else {
-            None
-        }
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode { &self.syntax }
-}
-impl AstNode for BindContextSingle {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool { kind == BIND_CONTEXT_SINGLE }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -3392,6 +3358,34 @@ impl AstNode for LetElse {
 impl AstNode for LetExpr {
     #[inline]
     fn can_cast(kind: SyntaxKind) -> bool { kind == LET_EXPR }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for LetStaticStmtMany {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LET_STATIC_STMT_MANY }
+    #[inline]
+    fn cast(syntax: SyntaxNode) -> Option<Self> {
+        if Self::can_cast(syntax.kind()) {
+            Some(Self { syntax })
+        } else {
+            None
+        }
+    }
+    #[inline]
+    fn syntax(&self) -> &SyntaxNode { &self.syntax }
+}
+impl AstNode for LetStaticStmtSingle {
+    #[inline]
+    fn can_cast(kind: SyntaxKind) -> bool { kind == LET_STATIC_STMT_SINGLE }
     #[inline]
     fn cast(syntax: SyntaxNode) -> Option<Self> {
         if Self::can_cast(syntax.kind()) {
@@ -5442,36 +5436,6 @@ impl AstNode for Item {
         }
     }
 }
-impl From<BindContextMany> for LetStaticStmt {
-    #[inline]
-    fn from(node: BindContextMany) -> LetStaticStmt { LetStaticStmt::BindContextMany(node) }
-}
-impl From<BindContextSingle> for LetStaticStmt {
-    #[inline]
-    fn from(node: BindContextSingle) -> LetStaticStmt { LetStaticStmt::BindContextSingle(node) }
-}
-impl AstNode for LetStaticStmt {
-    #[inline]
-    fn can_cast(kind: SyntaxKind) -> bool {
-        matches!(kind, BIND_CONTEXT_MANY | BIND_CONTEXT_SINGLE)
-    }
-    #[inline]
-    fn cast(syntax: SyntaxNode) -> Option<Self> {
-        let res = match syntax.kind() {
-            BIND_CONTEXT_MANY => LetStaticStmt::BindContextMany(BindContextMany { syntax }),
-            BIND_CONTEXT_SINGLE => LetStaticStmt::BindContextSingle(BindContextSingle { syntax }),
-            _ => return None,
-        };
-        Some(res)
-    }
-    #[inline]
-    fn syntax(&self) -> &SyntaxNode {
-        match self {
-            LetStaticStmt::BindContextMany(it) => &it.syntax,
-            LetStaticStmt::BindContextSingle(it) => &it.syntax,
-        }
-    }
-}
 impl From<BoxPat> for Pat {
     #[inline]
     fn from(node: BoxPat) -> Pat { Pat::BoxPat(node) }
@@ -5612,9 +5576,13 @@ impl From<Item> for Stmt {
     #[inline]
     fn from(node: Item) -> Stmt { Stmt::Item(node) }
 }
-impl From<LetStaticStmt> for Stmt {
+impl From<LetStaticStmtMany> for Stmt {
     #[inline]
-    fn from(node: LetStaticStmt) -> Stmt { Stmt::LetStaticStmt(node) }
+    fn from(node: LetStaticStmtMany) -> Stmt { Stmt::LetStaticStmtMany(node) }
+}
+impl From<LetStaticStmtSingle> for Stmt {
+    #[inline]
+    fn from(node: LetStaticStmtSingle) -> Stmt { Stmt::LetStaticStmtSingle(node) }
 }
 impl From<LetStmt> for Stmt {
     #[inline]
@@ -5807,8 +5775,6 @@ impl AstNode for AnyHasAttrs {
                 | AWAIT_EXPR
                 | BECOME_EXPR
                 | BIN_EXPR
-                | BIND_CONTEXT_MANY
-                | BIND_CONTEXT_SINGLE
                 | BLOCK_EXPR
                 | BREAK_EXPR
                 | CALL_EXPR
@@ -5831,6 +5797,8 @@ impl AstNode for AnyHasAttrs {
                 | INDEX_EXPR
                 | ITEM_LIST
                 | LET_EXPR
+                | LET_STATIC_STMT_MANY
+                | LET_STATIC_STMT_SINGLE
                 | LET_STMT
                 | LIFETIME_PARAM
                 | LITERAL
@@ -5907,14 +5875,6 @@ impl From<BecomeExpr> for AnyHasAttrs {
 impl From<BinExpr> for AnyHasAttrs {
     #[inline]
     fn from(node: BinExpr) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
-}
-impl From<BindContextMany> for AnyHasAttrs {
-    #[inline]
-    fn from(node: BindContextMany) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
-}
-impl From<BindContextSingle> for AnyHasAttrs {
-    #[inline]
-    fn from(node: BindContextSingle) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<BlockExpr> for AnyHasAttrs {
     #[inline]
@@ -6003,6 +5963,14 @@ impl From<ItemList> for AnyHasAttrs {
 impl From<LetExpr> for AnyHasAttrs {
     #[inline]
     fn from(node: LetExpr) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<LetStaticStmtMany> for AnyHasAttrs {
+    #[inline]
+    fn from(node: LetStaticStmtMany) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
+}
+impl From<LetStaticStmtSingle> for AnyHasAttrs {
+    #[inline]
+    fn from(node: LetStaticStmtSingle) -> AnyHasAttrs { AnyHasAttrs { syntax: node.syntax } }
 }
 impl From<LetStmt> for AnyHasAttrs {
     #[inline]
@@ -6771,11 +6739,6 @@ impl std::fmt::Display for Item {
         std::fmt::Display::fmt(self.syntax(), f)
     }
 }
-impl std::fmt::Display for LetStaticStmt {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self.syntax(), f)
-    }
-}
 impl std::fmt::Display for Pat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
@@ -6902,16 +6865,6 @@ impl std::fmt::Display for BecomeExpr {
     }
 }
 impl std::fmt::Display for BinExpr {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self.syntax(), f)
-    }
-}
-impl std::fmt::Display for BindContextMany {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        std::fmt::Display::fmt(self.syntax(), f)
-    }
-}
-impl std::fmt::Display for BindContextSingle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }
@@ -7097,6 +7050,16 @@ impl std::fmt::Display for LetElse {
     }
 }
 impl std::fmt::Display for LetExpr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LetStaticStmtMany {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self.syntax(), f)
+    }
+}
+impl std::fmt::Display for LetStaticStmtSingle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         std::fmt::Display::fmt(self.syntax(), f)
     }

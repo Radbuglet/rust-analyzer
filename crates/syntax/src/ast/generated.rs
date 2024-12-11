@@ -24,6 +24,8 @@ impl AstNode for Stmt {
         let res = match syntax.kind() {
             LET_STMT => Stmt::LetStmt(LetStmt { syntax }),
             EXPR_STMT => Stmt::ExprStmt(ExprStmt { syntax }),
+            LET_STATIC_STMT_SINGLE => Stmt::LetStaticStmtSingle(LetStaticStmtSingle { syntax }),
+            LET_STATIC_STMT_MANY => Stmt::LetStaticStmtMany(LetStaticStmtMany { syntax }),
             _ => {
                 let item = Item::cast(syntax)?;
                 Stmt::Item(item)
@@ -34,10 +36,8 @@ impl AstNode for Stmt {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Stmt::LetStmt(it) => &it.syntax,
-            Stmt::LetStaticStmt(it) => match it {
-                LetStaticStmt::BindContextMany(it) => &it.syntax,
-                LetStaticStmt::BindContextSingle(it) => &it.syntax,
-            },
+            Stmt::LetStaticStmtSingle(it) => &it.syntax,
+            Stmt::LetStaticStmtMany(it) => &it.syntax,
             Stmt::ExprStmt(it) => &it.syntax,
             Stmt::Item(it) => it.syntax(),
         }
