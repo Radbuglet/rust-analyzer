@@ -146,6 +146,7 @@ define_symbols! {
     boxed,
     branch,
     Break,
+    bundle,
     c_void,
     C,
     call_mut,

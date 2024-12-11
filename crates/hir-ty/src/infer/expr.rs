@@ -1658,8 +1658,8 @@ impl InferenceContext<'_> {
                         }
                         Statement::Item(_) => (),
                         Statement::LetStatic(kind) => match *kind {
-                            // TODO
-                            LetStaticKind::Single(ty, expr) => {
+                            // TODO: make type inference more precise
+                            LetStaticKind::Single(_ty, expr) => {
                                 this.infer_expr(expr, &Expectation::None, ExprIsRead::Yes);
                             }
                             LetStaticKind::Bundle(expr) => {
@@ -2022,13 +2022,34 @@ impl InferenceContext<'_> {
         skip_indices: &[u32],
         is_varargs: bool,
     ) {
-        let arg_count_mismatch = args.len() != param_tys.len() + skip_indices.len() && !is_varargs;
-        if arg_count_mismatch {
+        let arg_count_mismatch = 'check_args: {
+            let found_arg_no = args.len();
+            let expected_arg_no = param_tys.len() + skip_indices.len();
+
+            if is_varargs {
+                break 'check_args false;
+            }
+
+            if found_arg_no == expected_arg_no {
+                break 'check_args false;
+            }
+
+            if found_arg_no < expected_arg_no {
+                let all_auto_args =
+                    param_tys[found_arg_no..].iter().all(|arg| self.is_auto_arg(arg));
+
+                if all_auto_args {
+                    break 'check_args false;
+                }
+            }
+
             self.push_diagnostic(InferenceDiagnostic::MismatchedArgCount {
                 call_expr: expr,
-                expected: param_tys.len() + skip_indices.len(),
-                found: args.len(),
+                expected: expected_arg_no,
+                found: found_arg_no,
             });
+
+            true
         };
 
         // Quoting https://github.com/rust-lang/rust/blob/6ef275e6c3cb1384ec78128eceeb4963ff788dca/src/librustc_typeck/check/mod.rs#L3325 --
@@ -2104,6 +2125,16 @@ impl InferenceContext<'_> {
                 }
             }
         }
+    }
+
+    fn is_auto_arg(&self, ty: &Ty) -> bool {
+        let Some(bundle) = self.resolve_lang_item(LangItem::Bundle) else {
+            return false;
+        };
+        let bundle = bundle.as_struct().unwrap();
+        let bundle_adt = chalk_ir::AdtId(hir_def::AdtId::StructId(bundle));
+
+        ty.adt_id(Interner) == Some(bundle_adt)
     }
 
     fn substs_for_method_call(

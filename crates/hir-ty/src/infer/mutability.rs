@@ -91,8 +91,8 @@ impl InferenceContext<'_> {
                         }
                         Statement::Item(_) => (),
                         Statement::LetStatic(kind) => match *kind {
-                            // TODO
-                            LetStaticKind::Single(ty, expr) => {
+                            // TODO: make this more precise as well
+                            LetStaticKind::Single(_ty, expr) => {
                                 self.infer_mut_expr(expr, Mutability::Not);
                             }
                             LetStaticKind::Bundle(expr) => {
