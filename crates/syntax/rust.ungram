@@ -341,6 +341,7 @@ Stmt =
 | ExprStmt
 | Item
 | LetStmt
+| LetStaticStmt
 
 LetStmt =
   Attr* 'let' Pat (':' Type)?
@@ -350,6 +351,16 @@ LetStmt =
 
 LetElse =
   'else' BlockExpr
+
+LetStaticStmt =
+  BindContextSingle
+| BindContextMany
+
+BindContextSingle =
+  Attr* 'let' 'static' Type '=' initializer:Expr ';'
+
+BindContextMany =
+  Attr* 'let' 'static' '..' initializer:Expr ';'
 
 ExprStmt =
   Expr ';'?

@@ -34,6 +34,10 @@ impl AstNode for Stmt {
     fn syntax(&self) -> &SyntaxNode {
         match self {
             Stmt::LetStmt(it) => &it.syntax,
+            Stmt::LetStaticStmt(it) => match it {
+                LetStaticStmt::BindContextMany(it) => &it.syntax,
+                LetStaticStmt::BindContextSingle(it) => &it.syntax,
+            },
             Stmt::ExprStmt(it) => &it.syntax,
             Stmt::Item(it) => it.syntax(),
         }

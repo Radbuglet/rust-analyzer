@@ -1370,6 +1370,9 @@ impl ExprCollector<'_> {
                 self.collect_macro_def(statements, macro_id);
             }
             ast::Stmt::Item(_item) => statements.push(Statement::Item(Item::Other)),
+            ast::Stmt::LetStaticStmt(stmt) => {
+                // TODO
+            }
         }
     }
 

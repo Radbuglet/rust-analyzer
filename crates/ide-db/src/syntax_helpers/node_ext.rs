@@ -90,6 +90,7 @@ pub fn preorder_expr_with_ctx_checker(
         match ast::Stmt::cast(node.clone()) {
             // Don't skip subtree since we want to process the expression child next
             Some(ast::Stmt::ExprStmt(_)) | Some(ast::Stmt::LetStmt(_)) => (),
+            Some(ast::Stmt::LetStaticStmt(_)) => (),
             // skip inner items which might have their own expressions
             Some(ast::Stmt::Item(_)) => preorder.skip_subtree(),
             None => {
@@ -128,6 +129,7 @@ pub fn walk_patterns_in_expr(start: &ast::Expr, cb: &mut dyn FnMut(ast::Pat)) {
             }
             // Don't skip subtree since we want to process the expression child next
             Some(ast::Stmt::ExprStmt(_)) => (),
+            Some(ast::Stmt::LetStaticStmt(_)) => (),
             // skip inner items which might have their own patterns
             Some(ast::Stmt::Item(_)) => preorder.skip_subtree(),
             None => {

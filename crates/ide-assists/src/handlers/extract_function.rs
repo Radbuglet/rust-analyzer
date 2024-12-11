@@ -285,10 +285,12 @@ fn extraction_target(node: &SyntaxNode, selection_range: TextRange) -> Option<Fu
     if let Some(stmt) = ast::Stmt::cast(node.clone()) {
         return match stmt {
             ast::Stmt::Item(_) => None,
-            ast::Stmt::ExprStmt(_) | ast::Stmt::LetStmt(_) => FunctionBody::from_range(
-                node.parent().and_then(ast::StmtList::cast)?,
-                node.text_range(),
-            ),
+            ast::Stmt::ExprStmt(_) | ast::Stmt::LetStmt(_) | ast::Stmt::LetStaticStmt(_) => {
+                FunctionBody::from_range(
+                    node.parent().and_then(ast::StmtList::cast)?,
+                    node.text_range(),
+                )
+            }
         };
     }
 
@@ -697,6 +699,10 @@ impl FunctionBody {
                         ast::Stmt::ExprStmt(expr_stmt) => expr_stmt.expr(),
                         ast::Stmt::Item(_) => None,
                         ast::Stmt::LetStmt(stmt) => stmt.initializer(),
+                        ast::Stmt::LetStaticStmt(stmt) => match stmt {
+                            ast::LetStaticStmt::BindContextMany(stmt) => stmt.initializer(),
+                            ast::LetStaticStmt::BindContextSingle(stmt) => stmt.initializer(),
+                        },
                     })
                     .for_each(|expr| walk_expr(&expr, cb));
                 if let Some(expr) = parent
@@ -720,6 +726,10 @@ impl FunctionBody {
                         ast::Stmt::ExprStmt(expr_stmt) => expr_stmt.expr(),
                         ast::Stmt::Item(_) => None,
                         ast::Stmt::LetStmt(stmt) => stmt.initializer(),
+                        ast::Stmt::LetStaticStmt(stmt) => match stmt {
+                            ast::LetStaticStmt::BindContextMany(stmt) => stmt.initializer(),
+                            ast::LetStaticStmt::BindContextSingle(stmt) => stmt.initializer(),
+                        },
                     })
                     .for_each(|expr| preorder_expr(&expr, cb));
                 if let Some(expr) = parent
@@ -746,6 +756,16 @@ impl FunctionBody {
                             }
                         }
                         ast::Stmt::Item(_) => (),
+                        ast::Stmt::LetStaticStmt(stmt) => {
+                            let expr = match stmt {
+                                ast::LetStaticStmt::BindContextMany(stmt) => stmt.initializer(),
+                                ast::LetStaticStmt::BindContextSingle(stmt) => stmt.initializer(),
+                            };
+
+                            if let Some(expr) = expr {
+                                walk_patterns_in_expr(&expr, cb)
+                            }
+                        }
                         ast::Stmt::LetStmt(stmt) => {
                             if let Some(pat) = stmt.pat() {
                                 walk_pat(&pat, cb);
