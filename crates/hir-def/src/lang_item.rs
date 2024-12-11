@@ -500,4 +500,8 @@ language_item_table! {
 
     String,                  sym::String,              string,                     Target::Struct,         GenericRequirement::None;
     CStr,                    sym::CStr,                c_str,                      Target::Struct,         GenericRequirement::None;
+
+    DerefCx,                 sym::deref_cx,            deref_cx_trait,             Target::Trait,          GenericRequirement::Exact(2);
+    DerefCxMut,              sym::deref_cx_mut,        deref_cx_mut_trait,         Target::Trait,          GenericRequirement::Exact(2);
+    DerefCxTarget,           sym::deref_cx_target,     deref_cx_target,            Target::AssocTy,        GenericRequirement::None;
 }

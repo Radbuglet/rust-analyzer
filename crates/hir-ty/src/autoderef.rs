@@ -8,7 +8,7 @@ use std::mem;
 use chalk_ir::cast::Cast;
 use hir_def::lang_item::LangItem;
 use hir_expand::name::Name;
-use intern::sym;
+use intern::{sym, Symbol};
 use limit::Limit;
 use triomphe::Arc;
 
@@ -173,30 +173,38 @@ pub(crate) fn builtin_deref<'ty>(
     }
 }
 
-pub(crate) fn deref_by_trait(
+pub(crate) fn deref_by_trait(table: &mut InferenceTable<'_>, ty: Ty) -> Option<Ty> {
+    // `DerefCx` takes priority over `Deref` in `rustc`
+    for (tra, proj) in [(LangItem::DerefCx, &sym::TargetCx), (LangItem::Deref, &sym::Target)] {
+        if let Some(ty) = deref_one_by_trait(table, &ty, tra, proj) {
+            return Some(ty);
+        }
+    }
+
+    None
+}
+
+fn deref_one_by_trait(
     table @ &mut InferenceTable { db, .. }: &mut InferenceTable<'_>,
-    ty: Ty,
+    ty: &Ty,
+    trait_item: LangItem,
+    trait_target_name: &Symbol,
 ) -> Option<Ty> {
     let _p = tracing::info_span!("deref_by_trait").entered();
-    if table.resolve_ty_shallow(&ty).inference_var(Interner).is_some() {
+    if table.resolve_ty_shallow(ty).inference_var(Interner).is_some() {
         // don't try to deref unknown variables
         return None;
     }
 
-    let deref_trait =
-        db.lang_item(table.trait_env.krate, LangItem::Deref).and_then(|l| l.as_trait())?;
+    let deref_trait = db.lang_item(table.trait_env.krate, trait_item).and_then(|l| l.as_trait())?;
     let target = db
         .trait_data(deref_trait)
-        .associated_type_by_name(&Name::new_symbol_root(sym::Target.clone()))?;
+        .associated_type_by_name(&Name::new_symbol_root(trait_target_name.clone()))?;
 
     let projection = {
         let b = TyBuilder::subst_for_def(db, deref_trait, None);
-        if b.remaining() != 1 {
-            // the Target type + Deref trait should only have one generic parameter,
-            // namely Deref's Self type
-            return None;
-        }
-        let deref_subst = b.push(ty).build();
+        let deref_subst = b.push(ty.clone()).fill_with_unknown().build();
+
         TyBuilder::assoc_type_projection(db, target, Some(deref_subst)).build()
     };
 
